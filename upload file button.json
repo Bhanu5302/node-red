@@ -1,0 +1,77 @@
+[
+    {
+        "id": "3f75975f0b3beccd",
+        "type": "ui_template",
+        "z": "ec34b8a7c11c0286",
+        "group": "9c491f67c0170880",
+        "name": "Upload Btn",
+        "order": 13,
+        "width": 9,
+        "height": 4,
+        "format": "<html lang=\"en\">\n\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>File Upload</title>\n    <link rel=\"stylesheet\" href=\"css/styles.css\"> <!-- Local CSS for general styles -->\n</head>\n\n<body>\n\n    <div id=\"drop-area\">\n        <div class=\"drop-icon\">📁</div>\n        <div class=\"drop-text\">Drag and drop JSON files here or click to upload</div>\n    </div>\n    <div id=\"progressWrapper\" style=\"display:none; margin-top: 10px;\">\n        <div id=\"progressBar\"\n            style=\"width: 100%; height: 20px; background-color: #f3f3f3; border: 1px solid #ccc; border-radius: 5px;\">\n            <div id=\"progressBarFill\" style=\"height: 100%; background-color: #4caf50; width: 0%; border-radius: 5px;\">\n            </div>\n        </div>\n    </div>\n    <div id=\"fileInfo\" style=\"margin-top: 10px;\"></div>\n\n    <!-- File upload button -->\n    <button id=\"uploadBtn\" class=\"upload-btn\">Upload parameter file</button>\n\n    <script>\n        (function(scope) {\n    const dropArea = document.getElementById('drop-area');\n    const progressWrapper = document.getElementById('progressWrapper');\n    const progressBarFill = document.getElementById('progressBarFill');\n    const fileInfo = document.getElementById('fileInfo');\n    const uploadBtn = document.getElementById('uploadBtn');\n\n    dropArea.addEventListener('dragenter', preventDefaults, false);\n    dropArea.addEventListener('dragover', preventDefaults, false);\n    dropArea.addEventListener('dragleave', handleDragLeave, false);\n    dropArea.addEventListener('drop', handleDrop, false);\n\n    dropArea.addEventListener('click', openFileDialog, false);\n    uploadBtn.addEventListener('click', openFileDialog, false);\n\n    function preventDefaults(event) {\n        event.preventDefault();\n        event.stopPropagation();\n    }\n\n    function handleDragLeave(event) {\n        if (event.relatedTarget !== null) {\n            return;\n        }\n        dropArea.classList.remove('highlight');\n        dropArea.innerHTML = `\n        <div class=\"drop-icon\">📁</div>\n        <div class=\"drop-text\">Drag and drop JSON files here or click to upload</div>\n        `;\n    }\n\n    function handleDrop(event) {\n        event.preventDefault();\n        const file = event.dataTransfer.files[0];\n        if (file.type !== 'application/json') {\n            alert('Please upload a valid JSON file.');\n            return;\n        }\n        confirmAndHandleFile(file);\n    }\n\n    function openFileDialog(event) {\n        const fileInput = document.createElement('input');\n        fileInput.type = 'file';\n        fileInput.accept = 'application/json'; // Restrict to JSON files\n\n        fileInput.addEventListener('change', handleFileSelect, false);\n        fileInput.click();\n    }\n\n    function handleFileSelect(event) {\n        const file = event.target.files[0];\n        if (file.type !== 'application/json') {\n            alert('Please upload a valid JSON file.');\n            return;\n        }\n        confirmAndHandleFile(file);\n    }\n\n    function confirmAndHandleFile(file) {\n        const confirmUpload = confirm(`Do you want to upload the file: ${file.name}?`);\n        if (confirmUpload) {\n            handleFile(file);\n        }\n    }\n\n    function handleFile(file) {\n        const reader = new FileReader();\n\n        reader.onloadstart = function() {\n            progressWrapper.style.display = 'block';\n            progressBarFill.style.width = '0%';\n        };\n\n        reader.onprogress = function(event) {\n            if (event.lengthComputable) {\n                let percentLoaded = Math.round((event.loaded / event.total) * 100);\n                progressBarFill.style.width = percentLoaded + '%';\n            }\n        };\n\n        reader.onloadend = function(event) {\n            fileInfo.innerText = 'File: ' + file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)';\n            progressWrapper.style.display = 'none';\n            sendToNodeRed(file.name, reader.result);\n        };\n\n        reader.onerror = function() {\n            fileInfo.innerText = 'Error reading file';\n            progressWrapper.style.display = 'none';\n        };\n\n        reader.readAsText(file);\n    }\n\n    function sendToNodeRed(filename, content) {\n        let payload = { filename: filename, content: content };\n        let msg = { payload: payload };\n        scope.send(msg);\n    }\n})(scope);\n    </script>\n\n</body>\n\n</html>\n\n<style>\n    /* Basic Reset */\n    * {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n    }\n    \n    body {\n    font-family: Arial, sans-serif; /* Fallback to Arial if Ubuntu is not available */\n    background-color: #222;\n    color: #fff;\n    }\n    \n    #drop-area {\n    border: 2px dashed #aaa;\n    padding: 20px;\n    text-align: center;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    background-color: #333;\n    border-radius: 8px;\n    min-height: 120px;\n    flex-direction: column;\n    gap: 10px;\n    cursor: pointer;\n    }\n    \n    .drop-text {\n    font-size: 16px;\n    color: #888;\n    }\n    \n    .drop-icon {\n    font-size: 4rem;\n    color: #888;\n    }\n    \n    #progressWrapper {\n    display: none;\n    margin-top: 10px;\n    }\n    \n    #fileInfo {\n    margin-top: 10px;\n    }\n    \n    .upload-btn {\n    background-color: #4caf50; /* Green background */\n    color: white; /* White text */\n    border: 2px solid #388e3c; /* Darker green border */\n    border-radius: 5px; /* Rounded corners */\n    padding: 8px 16px; /* Smaller padding */\n    font-size: 14px; /* Smaller text size */\n    cursor: pointer; /* Pointer cursor on hover */\n    margin-top: 20px; /* Top margin */\n    }\n    \n    .upload-btn:hover {\n    background-color: #388e3c; /* Darker green on hover */\n    }\n\n</style>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 730,
+        "y": 2080,
+        "wires": [
+            [
+                "0c5ee51f10c4c61c"
+            ]
+        ]
+    },
+    {
+        "id": "0c5ee51f10c4c61c",
+        "type": "json",
+        "z": "ec34b8a7c11c0286",
+        "name": "",
+        "property": "payload.content",
+        "action": "",
+        "pretty": false,
+        "x": 970,
+        "y": 2080,
+        "wires": [
+            [
+                "80ca0d079e58d2ca"
+            ]
+        ]
+    },
+    {
+        "id": "80ca0d079e58d2ca",
+        "type": "debug",
+        "z": "ec34b8a7c11c0286",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 1250,
+        "y": 2080,
+        "wires": []
+    },
+    {
+        "id": "9c491f67c0170880",
+        "type": "ui_group",
+        "name": "Testing",
+        "tab": "381511ae694c2a9f",
+        "order": 2,
+        "disp": true,
+        "width": 14,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "381511ae694c2a9f",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
